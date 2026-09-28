@@ -1,14 +1,7 @@
 # Smart Farm Asset Inspector
 
-**Team:** Team 2
-**Members:**
 
-| Name | Email |
-|---|---|
-| _Yosra Mahfoudh_ | _ymahfoudh@eagleprojects.tn_ |
-| _Khaled Sammari_ | _ksammari@eagleprojects.tn_ |
-
-**Demo video:**[▶ Watch the demonstration video](https://eagleprojecttunisia-my.sharepoint.com/personal/ksammari_eagleprojects_tn/_layouts/15/stream.aspx?id=%2Fpersonal%2Fksammari%5Feagleprojects%5Ftn%2FDocuments%2FMicrosoft%20Teams%20Chat%20Files%2FBeauty%5FContest%5Fdemo%2Ewebm&referrer=StreamWebApp%2EWeb&referrerScenario=AddressBarCopied%2Eview%2Edf8d578f%2D6868%2D4edb%2D88bd%2D73e22410a167&ga=1)**
+**Demo video:**[▶ Watch the demonstration video](https://drive.google.com/file/d/1fiz56WOlwICUAiJX_mk_BgXIIi40ElZx/view?usp=sharing)**
 
  
 
