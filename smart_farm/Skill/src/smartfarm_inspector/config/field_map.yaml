@@ -1,0 +1,102 @@
+# Field map — the bridge between the LLM's vocabulary and the simulator.
+#
+# The original pipeline produced field_ids as free text ("north field", "2",
+# "sector 3"). Free text cannot be navigated to. This file is what turns a
+# parsed field_id into poses the ROS 2 stack can execute, and what lets the
+# validator reject a field the farm does not have.
+#
+# Coordinates are in the SIMULATOR's map frame:
+#   nav_launch/maps/car_tree.yaml — 0.05 m/px, origin [-18.6, -13.2], 740x532
+#   world extent x [-18.6, 18.4], y [-13.2, 13.4]
+#   robot spawns at (0, 0, 0.275) per go2_sim.launch.py
+#
+# The car_tree world is a regular grid of obstacles with clear 4 m aisles
+# between them. Those aisles are used as crop rows. Every coordinate below was
+# checked against the occupancy grid with 0.45 m clearance; re-run after any
+# map or world change:
+#   python -m smartfarm.tools.verify_field_map --map <path to car_tree.yaml>
+
+farm_id: eagle_demo_farm
+farm_name: Demo Farm North
+frame_id: map
+map_name: car_tree
+
+# Published as MissionData.geofencing and enforced at runtime by the stack's
+# existing geofencing_node.
+geofence:
+  - [-15.5, -12.0]
+  - [15.5, -12.0]
+  - [15.5, 12.0]
+  - [-15.5, 12.0]
+
+# Published as MissionData.danger_zones; danger_zone_manager rasterises these
+# into the costmap so the global planner routes around them.
+# NOTE: these must not intersect the crop rows. Rows span x [-13, 13] and sit
+# at y = -10, -6, -2, 2, 6, 10, so no-go zones live outside that band. The
+# first draft of this file put the irrigation channel at x 7-12, y 7-11, which
+# sat directly on row north_2 -- every mission over that row was rejected with
+# NO_GO_VIOLATION. Caught by the validator, not in the field.
+no_go_zones:
+  - name: irrigation_pump_house
+    polygon: [[13.6, 3.0], [15.4, 3.0], [15.4, 9.0], [13.6, 9.0]]
+  - name: equipment_yard
+    polygon: [[-15.4, -11.9], [-13.6, -11.9], [-13.6, -7.0], [-15.4, -7.0]]
+
+base_station:
+  name: charging_dock
+  pose: [0.0, 0.0, 0.0]
+
+# Fields the robot can actually inspect. `aliases` are what a farmer might
+# type; the resolver matches against them so "the north field", "field 1" and
+# "north_field" all land on the same mapped field.
+fields:
+  north_field:
+    crop: tomato
+    aliases: ["north", "north field", "field 1", "1", "sector 1", "top field"]
+    rows: [north_1, north_2]
+  central_field:
+    crop: lettuce
+    aliases: ["central", "central field", "middle", "field 2", "2", "sector 2"]
+    rows: [central_1, central_2]
+  south_field:
+    crop: corn
+    aliases: ["south", "south field", "field 3", "3", "sector 3", "bottom field"]
+    rows: [south_1, south_2]
+
+# Verified clear corridors. The robot drives entry -> exit capturing imagery.
+rows:
+  north_1:   {field: north_field,   entry: [-13.0, 6.0],   exit: [13.0, 6.0],   length_m: 26.0}
+  north_2:   {field: north_field,   entry: [-13.0, 10.0],  exit: [13.0, 10.0],  length_m: 26.0}
+  central_1: {field: central_field, entry: [-13.0, -2.0],  exit: [13.0, -2.0],  length_m: 26.0}
+  central_2: {field: central_field, entry: [-13.0, 2.0],   exit: [13.0, 2.0],   length_m: 26.0}
+  south_1:   {field: south_field,   entry: [-13.0, -10.0], exit: [13.0, -10.0], length_m: 26.0}
+  south_2:   {field: south_field,   entry: [-13.0, -6.0],  exit: [1.0, -6.0],   length_m: 14.0}
+
+landmarks:
+  field_gate:          [0.0, -10.0]
+  greenhouse_entrance: [-14.0, -2.0]
+  irrigation_valve:    [5.5, 6.0]
+
+robot:
+  model: unitree_go2
+  # The original config allowed 1.5 m/s. That is above what the Go2 does
+  # stably under the sim's path follower, and well above what produces usable
+  # imagery. Inspection speed is what actually gets used.
+  nominal_speed_mps: 0.6
+  inspection_speed_mps: 0.3
+  max_speed_mps: 0.8
+  battery_capacity_wh: 145.0
+  # Legged locomotion: ~100 W sustained => ~0.35 Wh/m. Calibrate against real
+  # Go2 telemetry before quoting this in a business case.
+  consumption_wh_per_m: 0.35
+  reserve_soc: 0.20
+
+# Guards against a plan that compiles into hundreds of navigation goals.
+limits:
+  max_goals_per_mission: 40
+  max_rows_per_mission: 6
+  min_capture_interval_m: 1.0
+  default_capture_interval_m: 4.0
+
+devices:
+  camera: realsense

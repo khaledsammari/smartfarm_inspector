@@ -1,0 +1,54 @@
+{
+  "crops": {
+    "tomato": {
+      "common_names": ["tomatoes", "tom", "toms"],
+      "diseases": ["powdery_mildew", "early_blight", "late_blight"],
+      "growth_stages": ["seedling", "flowering", "fruiting", "mature"],
+      "optimal_temp_c": 22,
+      "water_needs_mm_per_week": 25,
+      "inspection_priority": "high"
+    },
+    "lettuce": {
+      "common_names": ["lettuce", "salad", "greens"],
+      "diseases": ["downy_mildew", "tip_burn"],
+      "growth_stages": ["seedling", "vegetative", "harvest_ready"],
+      "optimal_temp_c": 18,
+      "water_needs_mm_per_week": 15,
+      "inspection_priority": "medium"
+    },
+    "corn": {
+      "common_names": ["corn", "maize"],
+      "diseases": ["corn_smut", "rust"],
+      "growth_stages": ["seedling", "vegetative", "flowering"],
+      "optimal_temp_c": 25,
+      "water_needs_mm_per_week": 30,
+      "inspection_priority": "high"
+    },
+    "cucumber": {
+      "common_names": ["cucumber", "cucumbers"],
+      "diseases": ["powdery_mildew", "downy_mildew"],
+      "growth_stages": ["seedling", "flowering", "fruiting"],
+      "optimal_temp_c": 24,
+      "water_needs_mm_per_week": 20,
+      "inspection_priority": "medium"
+    }
+  },
+  "diseases": {
+    "powdery_mildew": {
+      "symptoms": ["white_powder", "yellowing"],
+      "crops": ["tomato", "cucumber"],
+      "severity": "medium"
+    },
+    "late_blight": {
+      "symptoms": ["water_soaked_lesions"],
+      "crops": ["tomato"],
+      "severity": "high"
+    }
+  },
+  "inspection_keywords": {
+    "disease": ["disease", "blight", "mildew", "rust"],
+    "weeds": ["weed", "unwanted"],
+    "irrigation": ["water", "drip", "moisture", "dry"],
+    "stress": ["stress", "yellowing", "wilting"]
+  }
+}

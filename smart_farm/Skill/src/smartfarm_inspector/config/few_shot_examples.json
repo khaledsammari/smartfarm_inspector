@@ -1,0 +1,51 @@
+{
+  "few_shot_examples": [
+    {
+      "input": "Check the north field for powdery mildew on tomatoes",
+      "output": {
+        "field_ids": ["north field"],
+        "crops": ["tomato"],
+        "inspection_types": ["disease_detection"],
+        "urgency": "routine",
+        "confidence": 0.95
+      }
+    },
+    {
+      "input": "Urgent: scan field 2 for late blight",
+      "output": {
+        "field_ids": ["2"],
+        "crops": [],
+        "inspection_types": ["disease_detection"],
+        "urgency": "urgent",
+        "confidence": 0.90
+      }
+    },
+    {
+      "input": "Inspect sector 3 for weeds and water stress in corn",
+      "output": {
+        "field_ids": ["3"],
+        "crops": ["corn"],
+        "inspection_types": ["weed_assessment", "crop_stress"],
+        "urgency": "routine",
+        "confidence": 0.92
+      }
+    },
+    {
+      "input": "Quick scan of the east pasture",
+      "output": {
+        "field_ids": ["east pasture"],
+        "crops": [],
+        "inspection_types": ["quick_scan"],
+        "urgency": "routine",
+        "confidence": 0.80
+      }
+    }
+  ],
+  "instruction_guidelines": [
+    "Extract field identifiers from text",
+    "Identify crop names",
+    "Determine inspection types from keywords",
+    "Assess urgency from language",
+    "Calculate confidence score"
+  ]
+}

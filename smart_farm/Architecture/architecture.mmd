@@ -1,0 +1,123 @@
+%% SmartFarm Inspector — system architecture
+%% Renders on GitLab/GitHub in a ```mermaid fence, or to PNG/SVG with
+%% mermaid-cli:  mmdc -i architecture.mmd -o architecture.png -s 2
+
+flowchart TD
+
+    OP["<b>OPERATOR</b> — farmer request, natural language<br/>'check the north field for powdery mildew on tomatoes'"]
+
+    %% ---------------------------------------------------------- LAYER 1
+    subgraph L1["<b>LAYER 1 — INTERPRETATION</b>&nbsp;&nbsp;(probabilistic)"]
+        direction TB
+        PARSER("<b>LLMRequestParser</b><br/>Claude Sonnet · subscription OAuth<br/>prompt grounded in the site config")
+        PARSED("<b>LLMParsedRequest</b><br/>field_ids · crops · inspection_types<br/>urgency · confidence · clarification")
+        PARSER --> PARSED
+    end
+
+    %% -------------------------------------------------------- LAYERS 2-3
+    subgraph L23["<b>LAYERS 2–3 — DETERMINISTIC</b>&nbsp;&nbsp;(no LLM, no network)"]
+        direction TB
+        REGISTRY("<b>FieldRegistry</b><br/>farmer phrasing → mapped field")
+        TASKGEN("<b>TaskGenerator</b><br/>waypoints · speed · sensors<br/>duration · energy")
+        VALIDATOR("<b>TaskValidator</b><br/>11 preconditions<br/>ERROR rejects · WARNING executes")
+        COMPILER("<b>MissionCompiler</b><br/>ROS2Task → MissionData")
+        REGISTRY --> TASKGEN
+        TASKGEN --> VALIDATOR
+        VALIDATOR -->|"validated"| COMPILER
+    end
+
+    RETURN["Returned to the farmer<br/>clarification or rejection"]
+
+    %% ---------------------------------------------------------- LAYER 5
+    subgraph L5["<b>LAYER 5 — SAFETY</b>&nbsp;&nbsp;(final authority · predates the LLM)"]
+        direction LR
+        GEO("<b>geofencing_node</b><br/>pose vs published fence")
+        DANGER("<b>danger_zone_manager</b><br/>no-go → costmap")
+        OBSTACLE("<b>obstacle_avoidance</b><br/>VETO over /cmd_vel")
+        %% No invisible ordering links here on purpose. Adding
+        %% `GEO ~~~ DANGER ~~~ OBSTACLE` does pin the left-to-right order,
+        %% but it also turns this row into a vertical stack and makes the
+        %% whole diagram ~900 px taller. The layout engine renders the row
+        %% right-to-left instead; the order carries no meaning, so it is
+        %% left alone.
+    end
+
+    %% ---------------------------------------------------------- LAYER 4
+    subgraph L4["<b>LAYER 4 — EXISTING EAGLE STACK</b>&nbsp;&nbsp;(unmodified)"]
+        direction TB
+        MISSIONMGR("<b>mission_manager</b>")
+        GLOBALPLAN("<b>global_planner</b>")
+        GOALACT("<b>goal_action_manager</b><br/>+ devices_manager")
+        FOLLOWER("<b>path_follower</b>")
+        MISSIONMGR --> GLOBALPLAN
+        MISSIONMGR --> GOALACT
+        GLOBALPLAN --> FOLLOWER
+    end
+
+    %% -------------------------------------------------------- OFFBOARD
+    subgraph VIS["<b>OFFBOARD — VISION</b>"]
+        direction TB
+        IMAGERY("Captured imagery<br/>media/realsense/")
+        DETECTOR("HSV hue-cluster detector<br/>no trained model")
+        REPORT("Anomaly report<br/>+ KPI log")
+        IMAGERY --> DETECTOR
+        DETECTOR --> REPORT
+    end
+
+    %% ------------------------------------------------------------ edges
+    OP -->|"/farm/inspection_request"| PARSER
+    PARSED --> REGISTRY
+    PARSED -.->|"clarification_needed<br/>nothing executes"| RETURN
+    VALIDATOR -.->|"ERROR<br/>nothing published"| RETURN
+
+    COMPILER -.->|"geofencing[ ]"| GEO
+    COMPILER -.->|"danger_zones[ ]"| DANGER
+    COMPILER ==>|"/mission_dataa<br/>RELIABLE + TRANSIENT_LOCAL"| MISSIONMGR
+
+    GEO ==>|"veto"| FOLLOWER
+    DANGER ==>|"costmap"| GLOBALPLAN
+    OBSTACLE ==>|"pause / lateral avoid<br/>(9× in the recorded mission)"| MISSIONMGR
+
+    GOALACT --> IMAGERY
+
+    %% ------------------------------------------------------------ styles
+    classDef llm      fill:#fbe9e9,stroke:#a62b2b,stroke-width:1.5px,color:#111
+    classDef det      fill:#e3f0fb,stroke:#1f6bb0,stroke-width:1.5px,color:#111
+    classDef detKey   fill:#c3ddf5,stroke:#1f6bb0,stroke-width:2.5px,color:#111
+    classDef safety   fill:#fdefd6,stroke:#c8830f,stroke-width:1.5px,color:#111
+    classDef safetyKey fill:#f7d9a0,stroke:#8a5a06,stroke-width:2.5px,color:#111
+    classDef eagle    fill:#e6f5ea,stroke:#2f8f4e,stroke-width:1.5px,color:#111
+    classDef vision   fill:#f0e9fb,stroke:#6a3fb5,stroke-width:1.5px,color:#111
+    classDef plain    fill:#eceff1,stroke:#5f6b70,stroke-width:1.5px,color:#111
+
+    class PARSER,PARSED llm
+    class REGISTRY,TASKGEN,COMPILER det
+    class VALIDATOR detKey
+    class GEO,DANGER safety
+    class OBSTACLE safetyKey
+    class MISSIONMGR,GLOBALPLAN,GOALACT,FOLLOWER eagle
+    class IMAGERY,DETECTOR,REPORT vision
+    class OP,RETURN plain
+
+    style L1  fill:#ffffff,stroke:#a62b2b,stroke-width:2px,color:#a62b2b
+    style L23 fill:#ffffff,stroke:#1f6bb0,stroke-width:2px,color:#1f6bb0
+    style L5  fill:#ffffff,stroke:#c8830f,stroke-width:2px,color:#8a5a06
+    style L4  fill:#ffffff,stroke:#2f8f4e,stroke-width:2px,color:#1f6b38
+    style VIS fill:#ffffff,stroke:#6a3fb5,stroke-width:2px,color:#4d2a86
+
+    %% Link indices count every edge in the order it is DEFINED in this file,
+    %% including the ones inside subgraphs. 0-8 are the intra-subgraph edges;
+    %% the cross-layer edges below start at 9. Insert an edge above and these
+    %% numbers shift.
+    %%   11,12     rejection paths     red dashed
+    %%   13,14     safety config out   orange dashed
+    %%   15        mission handoff     dark, thick
+    %%   16,17,18  safety overrides    brown, thickest
+    linkStyle 11 stroke:#a62b2b,stroke-width:1.5px,color:#a62b2b
+    linkStyle 12 stroke:#a62b2b,stroke-width:1.5px,color:#a62b2b
+    linkStyle 13 stroke:#c8830f,stroke-width:1.5px,color:#8a5a06
+    linkStyle 14 stroke:#c8830f,stroke-width:1.5px,color:#8a5a06
+    linkStyle 15 stroke:#333333,stroke-width:2.5px,color:#111
+    linkStyle 16 stroke:#8a5a06,stroke-width:3px,color:#8a5a06
+    linkStyle 17 stroke:#8a5a06,stroke-width:3px,color:#8a5a06
+    linkStyle 18 stroke:#8a5a06,stroke-width:3px,color:#8a5a06

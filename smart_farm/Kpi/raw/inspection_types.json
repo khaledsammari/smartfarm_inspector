@@ -1,0 +1,60 @@
+{
+  "inspection_types": {
+    "disease_detection": {
+      "description": "Scan for crop diseases using camera images",
+      "required_sensors": ["camera"],
+      "duration_minutes": 30,
+      "priority_crops": ["tomato", "corn"],
+      "ai_model": "simulated"
+    },
+    "weed_assessment": {
+      "description": "Identify weed distribution using camera",
+      "required_sensors": ["camera"],
+      "duration_minutes": 25,
+      "priority_crops": ["corn", "lettuce"],
+      "ai_model": "simulated"
+    },
+    "irrigation_check": {
+      "description": "Check field using camera for water stress signs",
+      "required_sensors": ["camera"],
+      "duration_minutes": 40,
+      "priority_crops": ["tomato", "cucumber"],
+      "ai_model": "simulated"
+    },
+    "crop_stress": {
+      "description": "Detect crop stress from visual symptoms using camera",
+      "required_sensors": ["camera"],
+      "duration_minutes": 35,
+      "priority_crops": ["corn", "tomato"],
+      "ai_model": "simulated"
+    },
+    "quick_scan": {
+      "description": "Fast visual inspection with camera",
+      "required_sensors": ["camera"],
+      "duration_minutes": 10,
+      "priority_crops": ["all"],
+      "ai_model": "simulated"
+    }
+  },
+  "urgency_levels": {
+    "routine": {
+      "max_duration": 45,
+      "response_time_hours": 24
+    },
+    "medium": {
+      "max_duration": 30,
+      "response_time_hours": 6
+    },
+    "urgent": {
+      "max_duration": 15,
+      "response_time_hours": 1
+    }
+  },
+  "field_constraints": {
+    "max_robot_speed_mps": 1.5,
+    "min_worker_distance_m": 3.0,
+    "battery_reserve_percent": 15,
+    "max_slope_degrees": 20,
+    "lidar_range_m": 5.0
+  }
+}
